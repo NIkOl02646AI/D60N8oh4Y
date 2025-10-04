@@ -1,0 +1,71 @@
+// 代码生成时间: 2025-10-04 19:47:34
+import io.javalin.Javalin;
+import io.javalin.apibuilder.ApiBuilder.*;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class LogisticsTrackingSystem {
+
+    // 模拟数据库中的物流信息
+    private Map<String, String> trackingInfo = new HashMap<>();
+
+    public static void main(String[] args) {
+        Javalin app = Javalin.start(7000);
+        // 创建物流跟踪系统实例
+        LogisticsTrackingSystem system = new LogisticsTrackingSystem();
+
+        // 添加路由和处理函数
+        app.routes(() -> {
+            app.get("/track/:id", system::handleTrackRequest);
+            app.post("/track", system::handleCreateTrackRequest);
+        });
+    }
+
+    // 处理跟踪请求
+    public void handleTrackRequest(Context ctx) {
+        // 从URL参数中获取物流ID
+        String trackingId = ctx.pathParam("id");
+
+        try {
+            // 检查物流ID是否存在
+            if (trackingInfo.containsKey(trackingId)) {
+                // 返回物流信息
+                ctx.json(trackingInfo.get(trackingId));
+            } else {
+                // 物流ID不存在，返回错误信息
+                ctx.status(404).json("Tracking ID not found.");
+            }
+        } catch (Exception e) {
+            // 处理异常情况
+            ctx.status(500).json("An error occurred: " + e.getMessage());
+        }
+    }
+
+    // 处理创建物流请求
+    public void handleCreateTrackRequest(Context ctx) {
+        try {
+            // 解析请求体
+            JSONObject request = new JSONObject(ctx.body());
+            String trackingId = request.getString("trackingId");
+            String status = request.getString("status");
+
+            // 检查物流ID是否已存在
+            if (trackingInfo.containsKey(trackingId)) {
+                ctx.status(409).json("Tracking ID already exists.");
+                return;
+            }
+
+            // 将物流信息存储到模拟数据库
+            trackingInfo.put(trackingId, status);
+
+            // 返回创建的物流信息
+            ctx.json(new JSONObject().put("trackingId", trackingId).put("status", status));
+        } catch (Exception e) {
+            // 处理异常情况
+            ctx.status(500).json("An error occurred: " + e.getMessage());
+        }
+    }
+}
